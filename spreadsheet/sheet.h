@@ -5,15 +5,14 @@
 
 #include <functional>
 #include <unordered_map>
-#include <set>
 
-class Sheet : public SheetInterface {
+class Sheet final : public SheetInterface {
 public:
 	~Sheet() override;
 
 	void SetCell(Position pos, std::string text) override;
 
-	Cell* GetPyreCell(Position pos);
+	Cell* GetPyreCell(Position pos) const;
 	const CellInterface* GetCell(Position pos) const override;
 	CellInterface* GetCell(Position pos) override;
 
@@ -24,10 +23,7 @@ public:
 	void PrintValues(std::ostream& output) const override;
 	void PrintTexts(std::ostream& output) const override;
 
-	// Можете дополнить ваш класс нужными полями и методами
-
 private:
-	// Можете дополнить ваш класс нужными полями и методами
 	class Hasher {
 	public:
 		size_t operator()(const Position pos) const {

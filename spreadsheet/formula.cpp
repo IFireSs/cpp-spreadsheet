@@ -3,9 +3,6 @@
 #include "FormulaAST.h"
 
 #include <algorithm>
-#include <cassert>
-#include <cctype>
-#include <iostream>
 #include <sstream>
 
 using namespace std::literals;
@@ -17,10 +14,9 @@ std::ostream& operator<<(std::ostream& output, FormulaError fe) {
 namespace {
     class Formula : public FormulaInterface {
     public:
-        // Реализуйте следующие методы:
         explicit Formula(std::string expression) try : ast_(ParseFormulaAST(expression)){
-        }catch (const FormulaException& formulaException) {
-            throw formulaException;
+        }catch (const FormulaException&) {
+            throw;
         }
         Value Evaluate(const SheetInterface& sheet) const override {
             try {

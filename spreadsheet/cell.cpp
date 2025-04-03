@@ -1,39 +1,36 @@
 #include "cell.h"
+
+#include <algorithm>
+
 #include "sheet.h"
-#include <cassert>
-#include <iostream>
+
 #include <memory>
 #include <string>
 #include <optional>
-
-// Реализуйте следующие методы
 
 Cell::Cell(Sheet& sheet) :  sheet_(sheet) {
 }
 
 Cell::~Cell() = default;
 
-void Cell::Set(std::string text) {
-    auto temp_impl = impl_->Clone();
+void Cell::Set(std::string text, const Position pos/*нужно исключительно для проверки на самоссылку в формуле*/) {
+    std::unique_ptr<Impl> temp_impl;
     if (text.empty()) {
-        impl_ = std::make_unique<EmptyImpl>();
+        temp_impl = std::make_unique<EmptyImpl>();
     } else if (text.size() > 1 && text[0] == FORMULA_SIGN) {
-        impl_ = std::make_unique<FormulaImpl>(text, sheet_);
+        temp_impl = std::make_unique<FormulaImpl>(text, sheet_);
     } else if (!text.empty()) {
-        impl_ = std::make_unique<TextImpl>(text);
+        temp_impl = std::make_unique<TextImpl>(text);
     }
-
-    std::set<Cell*> black, grey;
-    if (Dfs_rec(this, black, grey)) {
-        impl_ = std::move(temp_impl);
+    if (CheckCircularDependency(temp_impl.get(), pos)) {
         throw CircularDependencyException("");
     }
+    impl_ = std::move(temp_impl);
     InvalidateCache_rec(true);
 }
 
 void Cell::Clear() {
-    impl_.reset();
-    InvalidateCache_rec(true);
+    Set("");
 }
 
 Cell::Value Cell::GetValue() const {
@@ -97,28 +94,10 @@ void Cell::InvalidateCache_rec(bool final) {
     }
 }
 
-bool Cell::Dfs_rec(Cell* pos, std::set<Cell*>& black, std::set<Cell*>& grey) {
-    if (black.count(pos)) {
-        return false;
-    }
-    if (grey.count(pos)) {
-        return true;
-    }
-    grey.insert(pos);
-    auto referenced_cells = pos->GetReferencedCells();
-    for (const auto& ref_pos : referenced_cells) {
-        Cell* ref_cell = sheet_.GetPyreCell(ref_pos);
-        if (!ref_cell) {
-            continue;
-        }
-        if (Dfs_rec(ref_cell, black, grey)) {
-            grey.erase(pos);
-            return true;
-        }
-    }
-    grey.erase(pos);
-    black.insert(pos);
-    return false;
+bool Cell::CheckCircularDependency(Impl* impl, Position pos) {
+    auto ref_positions = impl->GetReferencedCells();
+    return std::any_of(ref_positions.begin(), ref_positions.end(),[&](const Position ref_pos) {
+        const Cell* ref_cell = sheet_.GetPyreCell(ref_pos);
+        return ref_pos == pos || (ref_cell && CheckCircularDependency(ref_cell->impl_.get(), pos));
+    });
 }
-
-

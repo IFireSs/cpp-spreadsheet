@@ -13,7 +13,7 @@ public:
     Cell(Sheet& sheet);
     ~Cell() override;
 
-    void Set(std::string text);
+    void Set(std::string text, Position position = Position::NONE);
     void Clear();
 
     Value GetValue() const override;
@@ -24,9 +24,7 @@ public:
 
 private:
     void InvalidateCache_rec(bool final); //инвалидация кэша во всех зависимых ячейках
-    bool Dfs_rec(Cell* pos/*текущая позиция*/, std::set<Cell*>& black/*пройденные узлы*/, std::set<Cell*>& grey/*текущий список узлов ветви*/); //поиск циклов в глубину
 
-//можете воспользоваться нашей подсказкой, но это необязательно.
     class Impl {
     public:
         virtual ~Impl() = default;
@@ -36,7 +34,6 @@ private:
         virtual std::vector<Position> GetReferencedCells() const {
             return std::vector<Position>();
         };
-        virtual std::unique_ptr<Impl> Clone() const = 0;
         virtual void InvalidateCache() {};
     };
     class EmptyImpl final : public Impl {
@@ -46,9 +43,6 @@ private:
         std::vector<Position> GetReferencedCells() const {
             return {};
         }
-        std::unique_ptr<Impl> Clone() const override {
-            return std::make_unique<EmptyImpl>(*this);
-        }
         void InvalidateCache() override {};
     };
     class TextImpl final : public Impl {
@@ -57,9 +51,6 @@ private:
         };
         Value GetValue() const override;
         std::string GetText() const override;
-        std::unique_ptr<Impl> Clone() const override {
-            return std::make_unique<TextImpl>(*this);
-        }
         void InvalidateCache() override {};
     private:
         std::string text_{};
@@ -73,9 +64,6 @@ private:
         Value GetValue() const override;
         std::string GetText() const override;
         std::vector<Position> GetReferencedCells() const override;
-        std::unique_ptr<Impl> Clone() const override {
-            return std::make_unique<FormulaImpl>(GetText(), sheet_interface_);
-        }
         void InvalidateCache() override; //Инвалидация кэша в данной ячейке
     private:
         std::unique_ptr<FormulaInterface> formula_;
@@ -83,7 +71,7 @@ private:
         mutable std::optional<FormulaInterface::Value> cache_{};
 
     };
-
+    bool CheckCircularDependency(Impl* impl, Position pos); //поиск циклов в глубину
     std::unique_ptr<Impl> impl_ = std::make_unique<EmptyImpl>();
     Sheet& sheet_;
 };

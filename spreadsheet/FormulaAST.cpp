@@ -104,7 +104,6 @@ public:
         Divide = '/',
     };
 
-public:
     explicit BinaryOpExpr(Type type, std::unique_ptr<Expr> lhs, std::unique_ptr<Expr> rhs)
         : type_(type)
         , lhs_(std::move(lhs))
@@ -177,7 +176,6 @@ public:
         UnaryMinus = '-',
     };
 
-public:
     explicit UnaryOpExpr(Type type, std::unique_ptr<Expr> operand)
         : type_(type)
         , operand_(std::move(operand)) {
@@ -237,7 +235,6 @@ public:
     }
 
     double Evaluate(const SheetInterface& sheet) const override {
-        // реализуйте метод.
         if (!cell_->IsValid()) {
             throw FormulaError(FormulaError::Category::Ref);
         }
@@ -307,7 +304,6 @@ public:
         return std::move(cells_);
     }
 
-public:
     void exitUnaryOp(FormulaParser::UnaryOpContext* ctx) override {
         assert(args_.size() >= 1);
 

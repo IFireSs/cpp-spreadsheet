@@ -6,7 +6,6 @@
 #include <algorithm>
 #include <functional>
 #include <iostream>
-#include <optional>
 
 using namespace std::literals;
 
@@ -19,14 +18,14 @@ void Sheet::SetCell(Position pos, std::string text) {
     if (cells_.find(pos) == cells_.end()) {
         cells_.emplace(pos, std::make_unique<Cell>(*this));
     }
-    cells_.at(pos)->Set(std::move(text));
+    cells_.at(pos)->Set(std::move(text), pos);
     for (const auto& ref : cells_.at(pos)->GetReferencedCells()) {
         if (cells_.find(ref) == cells_.end()) {
             cells_.emplace(ref, std::make_unique<Cell>(*this));
         }
     }
 }
-Cell* Sheet::GetPyreCell(Position pos) {
+Cell* Sheet::GetPyreCell(Position pos) const {
     if (!pos.IsValid()) {
         throw InvalidPositionException("");
     }
@@ -35,11 +34,7 @@ Cell* Sheet::GetPyreCell(Position pos) {
 }
 
 const CellInterface* Sheet::GetCell(Position pos) const {
-    if (!pos.IsValid()) {
-        throw InvalidPositionException("");
-    }
-    auto it = cells_.find(pos);
-    return (it != cells_.end() && it->second) ? it->second.get() : nullptr;
+    return GetPyreCell(pos);
 }
 CellInterface* Sheet::GetCell(Position pos) {
     return GetPyreCell(pos);
@@ -50,6 +45,7 @@ void Sheet::ClearCell(Position pos) {
         throw InvalidPositionException("");
     }
     if (const auto& cell = cells_.find(pos); cell != cells_.end() && cell->second != nullptr) {
+        cell->second->Clear();
         cell->second.reset();
     }
 }
