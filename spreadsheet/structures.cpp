@@ -13,7 +13,6 @@ const int MAX_POS_LETTER_COUNT = 3;
 
 const Position Position::NONE = {-1, -1};
 
-// Реализуйте методы:
 bool Position::operator==(const Position rhs) const {
   return col == rhs.col && row == rhs.row;
 }
