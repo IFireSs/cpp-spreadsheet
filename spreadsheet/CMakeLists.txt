@@ -1,6 +1,18 @@
 cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
 project(spreadsheet)
-
+if (MSVC)
+    # Глобально форсируем /MD и /MDd
+    set(CMAKE_C_FLAGS_DEBUG          "${CMAKE_C_FLAGS_DEBUG} /MDd")
+    set(CMAKE_C_FLAGS_RELEASE        "${CMAKE_C_FLAGS_RELEASE} /MD")
+    set(CMAKE_CXX_FLAGS_DEBUG        "${CMAKE_CXX_FLAGS_DEBUG} /MDd")
+    set(CMAKE_CXX_FLAGS_RELEASE      "${CMAKE_CXX_FLAGS_RELEASE} /MD")
+    set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} /MD")
+    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} /MD")
+    set(CMAKE_C_FLAGS_MINSIZEREL     "${CMAKE_C_FLAGS_MINSIZEREL} /MD")
+    set(CMAKE_CXX_FLAGS_MINSIZEREL   "${CMAKE_CXX_FLAGS_MINSIZEREL} /MD")
+    # GTest внутри зависимостей — со «shared CRT»
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+endif()
 set(CMAKE_CXX_STANDARD 17)
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     set(
@@ -14,7 +26,7 @@ else()
     )
 endif()
 
-set(ANTLR_EXECUTABLE ${CMAKE_CURRENT_SOURCE_DIR}/antlr-4.12.0-complete.jar)
+set(ANTLR_EXECUTABLE ${CMAKE_CURRENT_SOURCE_DIR}/antlr4-4.13.2-complete.jar)
 include(${CMAKE_CURRENT_SOURCE_DIR}/FindANTLR.cmake)
 
 add_definitions(
@@ -38,8 +50,7 @@ file(GLOB sources
     *.h
 )
 
-add_executable(
-    spreadsheet
+add_executable(spreadsheet
     ${ANTLR_FormulaParser_CXX_OUTPUTS}
     ${sources}
 )
