@@ -13,7 +13,7 @@ Cell::Cell(Sheet& sheet) :  sheet_(sheet) {
 
 Cell::~Cell() = default;
 
-void Cell::Set(std::string text, const Position pos/*нужно исключительно для проверки на самоссылку в формуле*/) {
+void Cell::Set(std::string text, const Position pos/*нужно исключительно для проверки на самоссылку в этой же ячейке*/) {
     std::unique_ptr<Impl> temp_impl;
     if (text.empty()) {
         temp_impl = std::make_unique<EmptyImpl>();
